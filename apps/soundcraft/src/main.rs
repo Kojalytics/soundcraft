@@ -19,6 +19,8 @@ mod logging;
 #[cfg(target_os = "macos")]
 mod native_menu;
 
+mod license;
+
 use soundcraft_engine::Engine;
 use soundcraft_ui_egui::{Services, SoundApp, UiState, dialogs};
 use std::sync::Arc;
@@ -76,13 +78,13 @@ impl eframe::App for App {
         // title carries them; elsewhere the egui menu bar already does.
         let title = if self.0.native_menu_bar {
             format!(
-                "{}{} — SoundCraft — {}",
+                "{}{} — SoundKoja — {}",
                 self.0.engine.session().name,
                 if self.0.engine.is_dirty() { " *" } else { "" },
                 if self.0.ui.window == soundcraft_ui_egui::MainWindow::Edit { "Edit" } else { "Mix" }
             )
         } else {
-            format!("{} — SoundCraft", self.0.engine.session().name)
+            format!("{} — SoundKoja", self.0.engine.session().name)
         };
         set_title(ctx, title);
     }
@@ -90,6 +92,11 @@ impl eframe::App for App {
         self.0.raw_input_hook(raw);
     }
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        // Without an activated Kojalytics license the window shows the lock screen instead.
+        #[cfg(not(target_arch = "wasm32"))]
+        if !crate::license::gate(ui) {
+            return;
+        }
         self.0.guarded(|app| app.ui(ui));
     }
     fn on_exit(&mut self) {
@@ -164,7 +171,7 @@ fn services() -> Services {
         pick_open: Some(Box::new(|purpose: &str, _exts: &[&str]| {
             let d = rfd::FileDialog::new();
             let d = match purpose {
-                "session.open" => d.add_filter("SoundCraft Session", &["scraft"]),
+                "session.open" => d.add_filter("SoundKoja Session", &["scraft"]),
                 "file.import_midi" => d.add_filter("MIDI", &["mid", "midi", "smf"]),
                 _ => d.add_filter(
                     "Audio",
@@ -177,7 +184,7 @@ fn services() -> Services {
             let path = std::path::Path::new(default);
             let mut d = match purpose {
                 "file.bounce_mix" => rfd::FileDialog::new().add_filter("Audio", &["wav", "aif", "aiff", "flac"]),
-                _ => rfd::FileDialog::new().add_filter("SoundCraft Session", &["scraft"]),
+                _ => rfd::FileDialog::new().add_filter("SoundKoja Session", &["scraft"]),
             };
             if let Some(dir) = path.parent().filter(|dir| dir.is_dir()) {
                 d = d.set_directory(dir);
@@ -199,7 +206,7 @@ fn app_icon() -> Option<egui::IconData> {
     #[cfg(target_os = "macos")]
     let png: &[u8] = include_bytes!("../../../assets/app-icon/soundcraft-macos-512.png");
     #[cfg(not(target_os = "macos"))]
-    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.soundcraft.png");
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/com.kojalytics.soundcraft.png");
     eframe::icon_data::from_png_bytes(png).map_err(|e| log::warn!("app icon: {e}")).ok()
 }
 
@@ -209,7 +216,7 @@ fn main() -> eframe::Result {
     let logger = logging::install();
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("SoundCraft {}", env!("CARGO_PKG_VERSION"));
+        println!("SoundKoja {}", env!("CARGO_PKG_VERSION"));
         return Ok(());
     }
     let demo = args.iter().any(|a| a == "--demo" || a == "--sample");
@@ -226,7 +233,7 @@ fn main() -> eframe::Result {
         .filter(|(i, a)| !(a.starts_with("--") || (i > &0 && args.get(i - 1).is_some_and(|p| p == "--control"))))
         .map(|(_, a)| a.clone())
         .collect();
-    log::info!("SoundCraft {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
+    log::info!("SoundKoja {} ({} {})", env!("CARGO_PKG_VERSION"), std::env::consts::OS, std::env::consts::ARCH);
     // The log file lives in the settings directory; opened after the arguments, so `--version`
     // leaves no file behind. Records logged until now are written to it first. Runs without
     // preferences (agents' test runs) log to standard error only, so they don't rotate away the
@@ -249,12 +256,12 @@ fn main() -> eframe::Result {
     let prefs = load_prefs().unwrap_or_default();
     let mut options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("SoundCraft")
+            .with_title("SoundKoja")
             .with_inner_size(sane_window_size(prefs.window_size))
             .with_maximized(prefs.window_maximized)
             .with_min_inner_size([960.0, 600.0])
             .with_drag_and_drop(true)
-            .with_app_id("ai.storyteller.soundcraft"),
+            .with_app_id("com.kojalytics.soundcraft"),
         ..Default::default()
     };
     if let Some(icon) = app_icon() {
@@ -264,7 +271,7 @@ fn main() -> eframe::Result {
     #[cfg(target_os = "windows")]
     graphics::configure(&mut options, eframe::wgpu::Backends::from_env(), eframe::wgpu::Dx12Compiler::from_env());
     eframe::run_native(
-        "SoundCraft",
+        "SoundKoja",
         options,
         Box::new(move |cc| {
             let player =
@@ -321,8 +328,8 @@ mod tests {
             out.textures_delta.clear();
             out.viewport_output.values().flat_map(|v| &v.commands).filter(|c| matches!(c, egui::ViewportCommand::Title(_))).count()
         };
-        assert_eq!(titles("Song — SoundCraft"), 1);
-        assert_eq!(titles("Song — SoundCraft"), 0);
-        assert_eq!(titles("Song * — SoundCraft"), 1);
+        assert_eq!(titles("Song — SoundKoja"), 1);
+        assert_eq!(titles("Song — SoundKoja"), 0);
+        assert_eq!(titles("Song * — SoundKoja"), 1);
     }
 }

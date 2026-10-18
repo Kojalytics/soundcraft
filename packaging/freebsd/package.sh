@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and package SoundCraft for FreeBSD:
+# Build and package SoundKoja for FreeBSD:
 #
 #   $DIST/soundcraft-<version>-freebsd-x86_64.tar.gz   a /usr/local-style tree:
 #       soundcraft-<version>-freebsd-x86_64/{bin, share/applications, share/icons, share/mime,
@@ -17,7 +17,7 @@ set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
 LINUX="$ROOT/packaging/linux"
-APP_ID=ai.storyteller.soundcraft
+APP_ID=com.kojalytics.soundcraft
 
 SKIP_BUILD=0
 while [ $# -gt 0 ]; do
@@ -36,7 +36,7 @@ case "$(uname -m)" in
 esac
 BASENAME="soundcraft-$VERSION-freebsd-$ARCH"
 
-echo "==> SoundCraft $VERSION for FreeBSD $ARCH"
+echo "==> SoundKoja $VERSION for FreeBSD $ARCH"
 
 if [ "$SKIP_BUILD" = 0 ]; then
   (cd "$ROOT" && cargo build --release --locked -p soundcraft -p soundcraft-cli)

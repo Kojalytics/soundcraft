@@ -14,10 +14,10 @@ fn main() {
     }
     let mut res = winresource::WindowsResource::new();
     res.set_icon("../../assets/app-icon/soundcraft.ico")
-        .set("ProductName", "SoundCraft")
-        .set("FileDescription", "SoundCraft digital audio workstation")
+        .set("ProductName", "SoundKoja")
+        .set("FileDescription", "SoundKoja digital audio workstation")
         .set("CompanyName", "Learning Machines LLC")
-        .set("LegalCopyright", "Copyright (c) the SoundCraft authors. MIT OR Apache-2.0.")
+        .set("LegalCopyright", "Copyright (c) the SoundKoja authors. MIT OR Apache-2.0.")
         .set("OriginalFilename", "soundcraft.exe")
         .set("InternalName", "soundcraft");
     if let Err(e) = res.compile() {
