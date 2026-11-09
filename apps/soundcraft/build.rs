@@ -16,7 +16,7 @@ fn main() {
     res.set_icon("../../assets/app-icon/soundcraft.ico")
         .set("ProductName", "SoundKoja")
         .set("FileDescription", "SoundKoja digital audio workstation")
-        .set("CompanyName", "Learning Machines LLC")
+        .set("CompanyName", "Kojalytics")
         .set("LegalCopyright", "Copyright (c) the SoundKoja authors. MIT OR Apache-2.0.")
         .set("OriginalFilename", "soundcraft.exe")
         .set("InternalName", "soundcraft");
